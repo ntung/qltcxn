@@ -99,6 +99,7 @@ class RentPaymentSearch(BaseModel):
     from_date: Optional[date] = None
     to_date: Optional[date] = None
     show_subtotal: bool = False
+    exact_dates: bool = False
     # description: str | None = None
     # price: float
     # tax: float | None = None

@@ -5,7 +5,7 @@ import collections
 from datetime import datetime, timedelta
 
 from database.models import Income, IncomeEnum, Rent, Room, Tenant
-from utils.utilities import start_end_week
+from utils.utilities import find_overlapped_days, start_end_week
 
 
 def get_task(todo):
@@ -141,44 +141,55 @@ def calculate_total_rents(rents):
     return result
 
 
-def filter_incomes_by_dates(incomes, from_date, to_date):
+def filter_incomes_by_dates(incomes, from_date, to_date, exact_dates = False):
     """Function: filter incomes by dates"""
     begin_date_of_from, end_date_of_from = start_end_week(from_date)
     begin_date_of_to, end_date_of_to = start_end_week(to_date)
+    if exact_dates:
+        begin_date_of_from = from_date
+        end_date_of_to = to_date
     start = begin_date_of_from
     weeks_included = []
     while start <= end_date_of_to:
         weeks_included.append(start)
         start += timedelta(days=7)
     # print(weeks_included)
+    # print(begin_date_of_from, end_date_of_to)
     filtered_incomes = []
     for income in incomes:
         ic_from_date = income["from_date"].date()
         ic_to_date = income["to_date"].date()
         if ic_from_date >= begin_date_of_from and ic_to_date <= end_date_of_to:
             filtered_incomes.append(income)
-        elif (ic_from_date.month != ic_to_date.month
-              and income["category"] == IncomeEnum.HOUSING_BENEFIT.value
-              and ((begin_date_of_from <= ic_to_date <= end_date_of_to)
-                   or (begin_date_of_from <= ic_from_date <= end_date_of_to))):
-            start = ic_from_date
-            weeks = []
-            while start <= ic_to_date:
-                weeks.append(start)
-                start += timedelta(days=7)
-            # print(weeks)
-            t = 0
-            for week in weeks:
-                if week in weeks_included:
-                    t += 1
-            # print(t)
-            amount = income["amount"]/len(weeks)*t
-            income["amount"] = amount
-            filtered_incomes.append(income)
+        if (ic_from_date.month != ic_to_date.month
+            and income["category"] in [IncomeEnum.HOUSING_BENEFIT.value,
+                                       IncomeEnum.STANDING_ORDER.value]
+            and ((begin_date_of_from <= ic_to_date <= end_date_of_to)
+               or (begin_date_of_from <= ic_from_date <= end_date_of_to))):
+            if not exact_dates:
+                start = ic_from_date
+                weeks = []
+                while start <= ic_to_date:
+                    weeks.append(start)
+                    start += timedelta(days=7)
+                # print(weeks)
+                t = 0
+                for week in weeks:
+                    if week in weeks_included:
+                        t += 1
+                # print(t)
+                amount = income["amount"]/len(weeks)*t
+                income["amount"] = amount
+                filtered_incomes.append(income)
+            else:
+                calculate_income_of_overlapped_days(income,
+                    begin_date_of_from, end_date_of_to)
+                filtered_incomes.append(income)
+
     return filtered_incomes
 
 
-def filter_rents_by_dates(rents, from_date, to_date):
+def filter_rents_by_dates(rents, from_date, to_date, exact_dates = False):
     """ Filter the rents by tenants. """
     begin_date_of_from, end_date_of_from = start_end_week(from_date)
     begin_date_of_to, end_date_of_to = start_end_week(to_date)
@@ -187,3 +198,20 @@ def filter_rents_by_dates(rents, from_date, to_date):
         if begin_date_of_from <= rent["week_commence"].date() <= end_date_of_to:
             filtered_rents.append(rent)
     return filtered_rents
+
+
+def calculate_income_of_overlapped_days(income, from_date, to_date):
+    """Calculates the income of overlapped days"""
+    print("{}: {} - {}: {}".format(income["category"],
+        income["from_date"], income["to_date"], income["amount"]))
+    delta = income["to_date"] - income["from_date"]
+    nb_days = delta.days + 1
+    print("{} days".format(nb_days))
+    begin_date = datetime.combine(from_date, datetime.min.time())
+    end_date = datetime.combine(to_date, datetime.min.time())
+    ic_from_date = datetime.combine(income["from_date"], datetime.min.time())
+    ic_to_date = datetime.combine(income["to_date"], datetime.min.time())
+    overlap = find_overlapped_days(begin_date, end_date, ic_from_date, ic_to_date)
+    print("{} days overlapped".format(overlap))
+    amount = income["amount"]/nb_days*overlap
+    income["amount"] = amount

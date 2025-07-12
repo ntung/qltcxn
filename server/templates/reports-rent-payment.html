@@ -44,7 +44,11 @@
                 <input type="checkbox" id="chk-subtotal-category">Sub total for Category
             </label>
         </div>
-        <div class="cell small-12 medium-4 large-4">&nbsp;</div>
+        <div class="cell small-12 medium-4 large-4">
+            <label for="chk-extract-dates">
+                <input type="checkbox" id="chk-extract-dates">Exact dates
+            </label>
+        </div>
     </div>
     <hr/>
 </div>
@@ -79,6 +83,7 @@
     const tenantSelector = $('#tenant');
     const btnSearchSelector = $('#btn-search');
     const chkSubtotalCategory = $('#chk-subtotal-category');
+    const chkExactDates = $('#chk-extract-dates');
     const fromDateSelector = $('#from-date');
     const toDateSelector = $('#to-date');
 
@@ -108,12 +113,14 @@
             return false;
         }
         const subTotal = chkSubtotalCategory.is(':checked');
+        const exactDates = chkExactDates.is(':checked');
         const URL = "/reports/rent-payment/search"
         const data = {
             "show_subtotal": subTotal,
+            "exact_dates": exactDates,
             "tenant": tenantSelector.val(),
-            'from_date': fromDateSelector.val(),
-            'to_date': toDateSelector.val()
+            "from_date": fromDateSelector.val(),
+            "to_date": toDateSelector.val()
         }
         fetch(URL, {
             method: 'POST',

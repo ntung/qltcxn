@@ -169,11 +169,13 @@ async def reports_rent_payment_search(item: RentPaymentSearch, req: Request):
     """Route: search or filter for the incomes"""
     tenant = col_tenants.find_one({"_id": ObjectId(item.tenant)})
     rents = col_rents.find({"tenant_id": tenant["id"]})
-    rents = filter_rents_by_dates(rents, item.from_date, item.to_date)
+    rents = filter_rents_by_dates(rents, item.from_date, item.to_date,
+                                  item.exact_dates)
     total_rents = calculate_total_rents(rents)
     cursor = col_incomes.find({"for_tenant": tenant["id"]})
     incomes = list(cursor)
-    incomes = filter_incomes_by_dates(incomes, item.from_date, item.to_date)
+    incomes = filter_incomes_by_dates(incomes, item.from_date, item.to_date,
+                                      item.exact_dates)
     groups = None
     total_groups = None
     if item.show_subtotal:
@@ -188,6 +190,7 @@ async def reports_rent_payment_search(item: RentPaymentSearch, req: Request):
         "incomes": incomes,
         "total_amount": total_amount,
         "show_subtotal": item.show_subtotal,
+        "exact_dates": item.exact_dates,
         "groups": groups,
         "total_groups": total_groups,
         "rents": rents,

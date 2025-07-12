@@ -1,6 +1,7 @@
 """
 Define the utilities and helpers
 """
+from collections import namedtuple
 from datetime import date, datetime, timedelta
 from dateutil import rrule
 from database.models import Income, IncomeEnum
@@ -28,6 +29,18 @@ def start_end_week(given_date):
     start = today - timedelta(days=today.weekday())
     end = start + timedelta(days=6)
     return start, end
+
+
+def find_overlapped_days(begin_date, end_date, ic_from_date, ic_to_date):
+    """Finds the overlapped days between two ranges of dates"""
+    Range = namedtuple("Range", ['start', 'end'])
+    r1 = Range(start=begin_date, end=end_date)
+    r2 = Range(start=ic_from_date, end=ic_to_date)
+    latest_start = max(r1.start, r2.start)
+    earliest_end = min(r1.end, r2.end)
+    delta = (earliest_end - latest_start).days + 1
+    overlap = max(0, delta)
+    return overlap
 
 
 def income_categories():
