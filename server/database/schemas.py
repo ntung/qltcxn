@@ -207,6 +207,11 @@ def filter_rents_by_dates(rents, from_date, to_date, exact_dates = False):
     return filtered_rents
 
 
+def calculate_rent_of_overlapped_days(rent, from_date, to_date):
+    """Calculates the rent of overlapped days"""
+    pass
+
+
 def calculate_income_of_overlapped_days(income, from_date, to_date):
     """Calculates the income of overlapped days"""
     print("{}: {} - {}: {}".format(income["category"],
