@@ -193,9 +193,16 @@ def filter_rents_by_dates(rents, from_date, to_date, exact_dates = False):
     """ Filter the rents by tenants. """
     begin_date_of_from, end_date_of_from = start_end_week(from_date)
     begin_date_of_to, end_date_of_to = start_end_week(to_date)
+    if exact_dates:
+        begin_date_of_from = from_date
+        end_date_of_to = to_date
     filtered_rents = []
     for rent in rents:
         if begin_date_of_from <= rent["week_commence"].date() <= end_date_of_to:
+            filtered_rents.append(rent)
+        if exact_dates:
+            calculate_rent_of_overlapped_days(rent,
+                begin_date_of_from, end_date_of_to)
             filtered_rents.append(rent)
     return filtered_rents
 
