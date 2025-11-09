@@ -1,3 +1,6 @@
+# Introduction 
+This server project is built on FastAPI and MongoDB.
+
 # Start the server
 ```bash
 uvicorn main:app --reload
